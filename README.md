@@ -67,7 +67,7 @@ highlight some of the advanced features it provides for gRPC.
 3.  Send a request to the `echo-grpc` sample app:
 
     ```sh
-    grpcurl -d '{"content": "echo"}' -proto echo-grpc/api/echo.proto \
+    grpcurl -d '{"content": "echo", "sleep": "1", "reverse": "true",}' -proto echo-grpc/api/echo.proto \
         -authority grpc.example.com -cacert cert.pem -v \
         $EXTERNAL_IP:443 api.Echo/Echo
     ```

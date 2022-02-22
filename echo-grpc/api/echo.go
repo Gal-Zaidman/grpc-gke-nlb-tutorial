@@ -18,8 +18,11 @@ package api
 
 import (
 	"context"
+	"github.com/googlecloudplatform/grpc-gke-nlb-tutorial/reverse-grpc/api"
+	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"os"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -28,16 +31,38 @@ import (
 // Server for the Echo gRPC API
 type Server struct {
 	UnimplementedEchoServer
+	ReverseAddress string
 }
 
 // Echo the content of the request
 func (s *Server) Echo(ctx context.Context, in *EchoRequest) (*EchoResponse, error) {
-	log.Printf("Handling Echo request [%v] with context %v", in, ctx)
+	reverse := in.GetReverse()
+	sleep := in.GetSleep()
+	content := in.GetContent()
+
+	log.Printf("Handling Echo request [%v] with context %v, content %v, sleep %v, reverse: %v",
+		in, ctx, content, sleep, reverse)
+	if sleep > 0 {
+		time.Sleep(time.Duration(sleep) * time.Second)
+	}
+	if reverse == true {
+		conn, err := grpc.Dial(s.ReverseAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			log.Fatalf("Failed to connect to address %v", s.ReverseAddress)
+		}
+		defer conn.Close()
+		c := api.NewReverseClient(conn)
+		r, err := c.Reverse(ctx, &api.ReverseRequest{Content: content})
+		if err != nil {
+			log.Fatalf("could not reverse: %v", err)
+		}
+		content = r.GetContent()
+	}
 	hostname, err := os.Hostname()
 	if err != nil {
 		log.Printf("Unable to get hostname %v", err)
 		hostname = ""
 	}
 	grpc.SendHeader(ctx, metadata.Pairs("hostname", hostname))
-	return &EchoResponse{Content: in.Content}, nil
+	return &EchoResponse{Content: content}, nil
 }

@@ -32,12 +32,16 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+	reverseAddress := os.Getenv("REVERSE_ADDRESS")
+	if reverseAddress == "" {
+		reverseAddress = "reverse-grpc.envoy.svc.cluster.local:8786"
+	}
 	listener, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer()
-	api.RegisterEchoServer(grpcServer, &api.Server{})
+	api.RegisterEchoServer(grpcServer, &api.Server{ReverseAddress: reverseAddress})
 	grpc_health_v1.RegisterHealthServer(grpcServer, &health.Server{})
 	reflection.Register(grpcServer)
 	log.Printf("Listening for Echo on port %s", port)

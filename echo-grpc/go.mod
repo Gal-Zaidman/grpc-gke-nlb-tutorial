@@ -17,6 +17,7 @@ module github.com/googlecloudplatform/grpc-gke-nlb-tutorial/echo-grpc
 go 1.16
 
 require (
+	github.com/googlecloudplatform/grpc-gke-nlb-tutorial/reverse-grpc v0.0.0-20210602081305-67a2ade094ce
 	google.golang.org/grpc v1.38.0
 	google.golang.org/protobuf v1.25.0
 )
